@@ -1,24 +1,9 @@
-use std::fmt;
-
 use bls12_381::{G1Affine, G2Affine};
 
 #[derive(Debug)]
 pub enum InvalidPoint {
     InvalidLength { expected: usize, actual: usize },
     DecodingError {},
-}
-
-impl fmt::Display for InvalidPoint {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            InvalidPoint::InvalidLength { expected, actual } => {
-                write!(f, "Invalid input length for point (must be in compressed format): Expected {}, actual: {}", expected, actual)
-            }
-            InvalidPoint::DecodingError {} => {
-                write!(f, "Invalid point")
-            }
-        }
-    }
 }
 
 pub fn g1_from_variable(data: &[u8]) -> Result<G1Affine, InvalidPoint> {

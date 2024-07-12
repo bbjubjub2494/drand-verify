@@ -4,8 +4,6 @@ use bls12_381::{
 };
 use pairing::{group::Group, MultiMillerLoop};
 use sha2::{Digest, Sha256};
-use std::error::Error;
-use std::fmt;
 
 use crate::points::{
     g1_from_fixed, g1_from_fixed_unchecked, g1_from_variable, g2_from_fixed,
@@ -143,7 +141,7 @@ impl Pubkey for G1Pubkey {
             Err(err) => {
                 return Err(VerificationError::InvalidPoint {
                     field: "signature".into(),
-                    msg: err.to_string(),
+                    err: err,
                 })
             }
         };
@@ -203,7 +201,7 @@ impl Pubkey for G2PubkeyFastnet {
             Err(err) => {
                 return Err(VerificationError::InvalidPoint {
                     field: "signature".into(),
-                    msg: err.to_string(),
+                    err: err,
                 })
             }
         };
@@ -269,7 +267,7 @@ impl Pubkey for G2PubkeyRfc {
             Err(err) => {
                 return Err(VerificationError::InvalidPoint {
                     field: "signature".into(),
-                    msg: err.to_string(),
+                    err: err,
                 })
             }
         };
@@ -280,20 +278,8 @@ impl Pubkey for G2PubkeyRfc {
 
 #[derive(Debug)]
 pub enum VerificationError {
-    InvalidPoint { field: String, msg: String },
+    InvalidPoint { field: &'static str, err: InvalidPoint },
 }
-
-impl fmt::Display for VerificationError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            VerificationError::InvalidPoint { field, msg } => {
-                write!(f, "Invalid point for field {}: {}", field, msg)
-            }
-        }
-    }
-}
-
-impl Error for VerificationError {}
 
 /// Checks if e(p, q) == e(r, s)
 ///
@@ -315,11 +301,11 @@ fn fast_pairing_equality(p: &G1Affine, q: &G2Affine, r: &G1Affine, s: &G2Affine)
     value.is_identity().into()
 }
 
-fn message(current_round: u64, prev_sig: &[u8]) -> Vec<u8> {
+fn message(current_round: u64, prev_sig: &[u8]) -> [u8; 32] {
     let mut hasher = Sha256::default();
     hasher.update(prev_sig);
     hasher.update(round_to_bytes(current_round));
-    hasher.finalize().to_vec()
+    hasher.finalize().into()
 }
 
 /// https://github.com/drand/drand-client/blob/master/wasm/chain/verify.go#L28-L33

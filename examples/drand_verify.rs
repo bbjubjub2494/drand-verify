@@ -23,7 +23,7 @@ fn main_impl() -> i32 {
 
     match pk.verify(round, &previous_signature, &signature) {
         Err(err) => {
-            eprintln!("Error during verification: {}", err);
+            eprintln!("Error during verification");
             12
         }
         Ok(valid) => {
